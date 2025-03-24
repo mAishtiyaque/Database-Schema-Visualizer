@@ -22,7 +22,7 @@ import Typography from "@mui/material/Typography/Typography";
 import AccordionDetails from "@mui/material/AccordionDetails/AccordionDetails";
 import CsvFormatGuide from "./CsvFormatGuide";
 // Types for CSV data and processed data
-const csvUrl = "/DB.csv";
+const csvUrl = "/Database-Schema-Visualizer/DB.csv";
 export interface ProcessedData {
   databases: string[];
   tables: string[];

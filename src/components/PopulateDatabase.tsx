@@ -6,6 +6,7 @@ import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import { ProcessedData } from "./CsvReader";
 import { Database, Table, Column } from "./utls";
+import Switch from "@mui/material/Switch/Switch";
 interface Props {
   structuredData: Database[];
   processedData: ProcessedData;
@@ -19,6 +20,11 @@ export const PopulateDatabase: React.FC<Props> = ({
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [filteredStructuredData, setFilteredStructuredData] =
     useState<Database[]>(structuredData);
+  const [toggleOR, setToggleOR] = useState<boolean>(false);
+  const handleToggleOR = () => {
+    executeFilter(selectedDatabases, selectedTables, selectedColumns, !toggleOR);
+    setToggleOR((state) => !state);
+  };
   useEffect(() => {
     setFilteredStructuredData(structuredData);
     setSelectedDatabases([]);
@@ -29,7 +35,8 @@ export const PopulateDatabase: React.FC<Props> = ({
   const executeFilter = (
     selectedDbs: string[],
     selectedTbs: string[],
-    selectedCols: string[]
+    selectedCols: string[],
+    toggle:boolean
   ) => {
     let filteredDb = structuredData.map((db) => ({
       ...db, // Copy top-level properties
@@ -58,12 +65,20 @@ export const PopulateDatabase: React.FC<Props> = ({
     if (selectedCols.length !== 0) {
       filteredDb.forEach((db: Database, dbIndex) => {
         filteredTb = db.tables.filter((tb: Table) => {
-          let isAnyColumnPresentInSelectedColumn = tb.columns.some(
-            (col: Column) => {
-              return selectedCols.includes(col.column_name);
-            }
-          );
-          return isAnyColumnPresentInSelectedColumn;
+          if (toggle) {
+            let isAnyColumnPresentInSelectedColumn = tb.columns.some(
+              (col: Column) => {
+                return selectedCols.includes(col.column_name);
+              }
+            );
+            return isAnyColumnPresentInSelectedColumn;
+          } else {
+            let isAllSelectedColumnPresentInColumn = selectedCols.every(
+              (selectedCol) =>
+                tb.columns.some((col) => col.column_name === selectedCol)
+            );
+            return isAllSelectedColumnPresentInColumn;
+          }
         });
         filteredDb[dbIndex].tables = filteredTb;
       });
@@ -73,15 +88,15 @@ export const PopulateDatabase: React.FC<Props> = ({
     setFilteredStructuredData(filteredDb);
   };
   const handleSelectedDatabase = (selectedDbs: string[]) => {
-    executeFilter(selectedDbs, selectedTables, selectedColumns);
+    executeFilter(selectedDbs, selectedTables, selectedColumns, toggleOR);
     setSelectedDatabases(selectedDbs);
   };
   const handleSelectedTable = (selectedTbs: string[]) => {
-    executeFilter(selectedDatabases, selectedTbs, selectedColumns);
+    executeFilter(selectedDatabases, selectedTbs, selectedColumns, toggleOR);
     setSelectedTables(selectedTbs);
   };
   const handleSelectedColumn = (selectedCols: string[]) => {
-    executeFilter(selectedDatabases, selectedTables, selectedCols);
+    executeFilter(selectedDatabases, selectedTables, selectedCols, toggleOR);
     setSelectedColumns(selectedCols);
   };
   return (
@@ -158,6 +173,7 @@ export const PopulateDatabase: React.FC<Props> = ({
             />
           )}
         />
+        <Switch onChange={handleToggleOR} defaultChecked={!toggleOR} />{" "}
       </Stack>
       {/* {JSON.stringify(selectedDatabases, null, 3)}
       {JSON.stringify(selectedTables, null, 3)}
